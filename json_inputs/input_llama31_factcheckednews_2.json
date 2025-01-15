@@ -1,0 +1,6 @@
+{
+    "input_data_path": "datasets/FactCheckedNews/Dataset/Fact_checked_news.tsv",
+    "input_data_column" : "news",
+    "input_instruction" : "Suponha que você é um cientista social em uma pesquisa sobre notícias falsas. Seu objetivo é, dada uma matéria de um site de checagem, extrair qual a possível notícia falsa que aquela matéria desmente. Seja direto, respondendo somente a notícia falsa em questão, sem justificativas ou textos excedentes. Assim, extraia a notícia falsa associada à seguinte matéria:  ",
+    "output_path": "outputs/output_llama31_factcheckednews_2.tsv"
+}

@@ -17,16 +17,19 @@ df = pd.read_csv(args.input_data_path, sep = '\t')
 
 df = df[df['label'] == 1]
 if args.number_of_samples:
-     df = df.sample(n = args.number_of_samples)
+     df = df.sample(n = args.number_of_samples, random_state= args.seed)
      
 
 def query_olmo2(news):
-    prompt = args.input_instruction + news
+    # prompt = args.input_instruction + news
 
     response: ChatResponse = chat(model=args.llm_model, messages=[
+         {'role' : 'user',
+          'content' : args.input_instruction
+         },
         {
         'role': 'user',
-        'content': prompt
+        'content': news
         }
     ])
 
@@ -36,4 +39,4 @@ def query_olmo2(news):
 df['Model Answer'] = df.progress_apply(lambda row: query_olmo2(row['news']) if row['label'] == 1 else None, axis=1)
 
 
-df.to_csv(args.output_path, sep = '\t')
+df[['Model Answer', 'news']].to_csv(args.output_path, sep = '\t')

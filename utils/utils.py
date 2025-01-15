@@ -14,6 +14,7 @@ def parse_arguments():
     parser.add_argument('--output_path', type = str, help = 'output path and name', default = 'output.csv')
     parser.add_argument('--number_of_samples', type = int, help = 'number of samples to run in test cases')
     parser.add_argument('--llm_model', type = str, default = 'llama3.1', help = 'OllaMa model name')
+    parser.add_argument('--seed', type = int, default = 42, help = 'seed for sample purpouses')
 
     return parser.parse_args()
 
