@@ -1,0 +1,7 @@
+{
+    "input_data_path": "datasets/FactCheckedNews/Dataset/Fact_checked_news.tsv",
+    "input_data_column" : "news",
+    "input_instruction" : "Suponha que você está trabalhando para identificar notícias falsas a partir de um site de checagem. Seu objetivo é, dado texto do site de checagem, gerar a possível notícia falsa que foi divulgada. Segue alguns exemplos: Texto de entrada: É #FAKE foto de Trump ao lado de cadeira com nome de Bolsonaro; imagem é de inteligência artificial Ferramenta de análise de imagens apontou que foto foi criada por IA. Publicações de redes sociais começaram a circular em 16 de janeiro, data em que Alexandre de Moraes negou pedido de Bolsonaro para viajar aos EUA e acompanhar a posse de Trump. Saída: Divulgada imagem de Trump ao lado de cadeira com nome de bolsonaro. Texto de entrada: É #FAKE que Instagram forçou usuários a seguirem contas de Trump e de seu vice O que ocorreu, na verdade, foi uma mudança dos titulares das contas oficiais do presidente e do vice-presidente dos EUA, administradas pela Casa Branca. Por isso, Trump agora ficou no lugar de Biden, e J.D. Vance substituiu Kamala Harris. Saída: Instagram força usuários a seguirem contas de Trump e de seu vice. Considerando esses exemplos, forneça a saída para o seguinte texto: ",
+    "output_path": "outputs/output_llama31_factcheckednews_3.tsv",
+    "llm_model": "llama3.1"
+}
