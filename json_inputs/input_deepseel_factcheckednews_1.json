@@ -1,0 +1,7 @@
+{
+    "input_data_path": "datasets/FactCheckedNews/Dataset/Fact_checked_news.tsv",
+    "input_data_column" : "news",
+    "input_instruction" : "Suponha que você está trabalhando para identificar notícias falsas a partir de um site de checagem. Seu objetivo é, dado texto do site de checagem, gerar a possível notícia falsa que foi divulgada. Seja direto, respondendo somente a notícia falsa em questão, sem justificativas ou textos excedentes. Sabendo disso, identifique a notícia falsa que foi divulgada a partir do seguinte texto do site de checagem: ",
+    "output_path": "outputs/loutput_lama31_factcheckednews_1.tsv",
+    "llm_model" : "deepseek-r1:14b"
+}
