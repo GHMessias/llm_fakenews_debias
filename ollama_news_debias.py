@@ -3,6 +3,7 @@ from ollama import chat
 from ollama import ChatResponse
 import utils.utils as utils
 from tqdm import tqdm
+import re
 
 tqdm.pandas()
 
@@ -35,8 +36,19 @@ def query_olmo2(news):
 
     return response.message.content.replace('\n', ' ')
 
-# df['Model Answer'] = df['news'].apply(query_olmo2)
-df['Model Answer'] = df.progress_apply(lambda row: query_olmo2(row['news']) if row['label'] == 1 else None, axis=1)
+def split_think_model(text):
+    return text.split('</think')[0]
 
+def split_model_answer(text):
+    return text.split('</think')[1]
 
-df[['Model Answer', 'news']].to_csv(args.output_path, sep = '\t')
+# if específico para modelos da deep_seek
+if 'deepseek' in args.llm_model:
+    df['aux_column'] = df.progress_apply(lambda row: query_olmo2(row['news']) if row['label'] == 1 else None, axis=1)
+    #  df[['think', 'model answer']] = df['aux_column'].apply(split_think_model)
+    df['think'] = df['aux_column'].apply(split_think_model)
+    df['Model Answer'] = df['aux_column'].apply(split_model_answer)
+    df[['Model Answer','think', 'news']].to_csv(args.output_path, sep = '\t')
+else:
+    df['Model Answer'] = df.progress_apply(lambda row: query_olmo2(row['news']) if row['label'] == 1 else None, axis=1)
+    df[['Model Answer', 'news']].to_csv(args.output_path, sep = '\t')
