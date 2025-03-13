@@ -18,7 +18,7 @@ df = pd.read_csv(args.input_data_path, sep = '\t')
 
 df = df[df['label'] == 1]
 if args.number_of_samples:
-     df = df.sample(n = args.number_of_samples, random_state= args.seed)
+     df = df.sample(n = args.number_of_samples)
      
 
 def query_olmo2(news):
