@@ -1,16 +1,39 @@
 #!/bin/bash
+while getopts "j:" opt; do
+    case $opt in
+        j) JSON_PATH=$OPTARG ;;
+        \?) echo "uso: run.sh -j json path"; exit 1 ;; 
+    esac
+done
+    
+ACTUAL_DATE=$(date +"%Y-%m-%d_%H:%M:%S")
+echo "process start at $ACTUAL_DATE"
 
-echo "Executando processamento LLM..."
-LLM_OUTPUT=$(python3 ollama_news_debias.py --config json_inputs/input_gemma_factcheckednews_1.json --number_of_samples 10)
-# OUTPUT_FILE=$(python3 ollama_news_debias.py --config json_inputs/input_gemma_factcheckednews_1.json --number_of_samples 10 | grep "OUTPUT_FILE: " | cut -d ' ' -f2)  # Captura a saída do script
+jq --arg date "$ACTUAL_DATE" '. + {"actual_date": $date}' "$JSON_PATH" > temp.json && mv temp.json "$JSON_PATH"
 
-OUTPUT_FILE=$(echo "$LLM_OUTPUT" | grep "OUTPUT_FILE:" | cut -d ' ' -f2)
-INPUT_PATH=$(echo "$LLM_OUTPUT" | grep "INPUT_FILE:" | cut -d ' ' -f2)
+MAIN_FILE_PATH=$(pwd)
 
+mkdir "results/$ACTUAL_DATE"
+sleep 2
 
-echo "------"
-echo "Debiased file path: $OUTPUT_FILE"
-echo "Original file path: $INPUT_PATH"
+echo "Running LLM debias and summarization..."
+python3 ollama_news_debias.py --config $JSON_PATH
 
-echo "Executando análise de dados..."
-python3 dataset_analysis.py --input_debiased_data_path "$OUTPUT_FILE" --input_data_path "$INPUT_PATH"
+# Escrevendo o caminho resultado no json
+LLM_PROCESSED_PATH=results/$ACTUAL_DATE/llm_processed_data.tsv
+echo "LLM debias/summarization completed. File saved at $LLM_PROCESSED_PATH"
+jq --arg input_debiased_data_path "$LLM_PROCESSED_PATH" '. + {"input_debiased_data_path": $input_debiased_data_path}' "$JSON_PATH" > temp.json && mv temp.json "$JSON_PATH"
+
+echo "Running data analysis..."
+python3 dataset_analysis.py --config $JSON_PATH 
+echo "Data analysis saved at COLOCAR PATH"
+
+EMBEDDING_MODEL=$(jq -r '.embedding_model' "$JSON_PATH")
+echo "Creating data embeddings using $EMBEDDING_MODEL"
+python3 text_embedding.py --config $JSON_PATH
+
+# Graph Generator
+EMBEDDING_ORIGINAL_PATH=results/$ACTUAL_DATE/embedded_original_data.npy
+EMBEDDING_DEBIASED_PATH=results/$ACTUAL_DATE/embedded_debiased_data.npy
+
+jq --arg embedding_original_path $EMBEDDING_ORIGINAL_PATH 

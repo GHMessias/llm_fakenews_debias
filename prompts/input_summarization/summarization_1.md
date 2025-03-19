@@ -1,0 +1,1 @@
+"sumarize o texto "

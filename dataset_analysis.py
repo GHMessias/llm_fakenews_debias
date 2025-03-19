@@ -26,3 +26,5 @@ print(f"Média de palavras por texto no dataset original: {media_palavras_input:
 print(f"Média de palavras por texto no dataset processado: {media_palavras_output:.2f}")
 
 #TODO: outras análises pertinentes
+
+#TODO: salvar os outputs em um arquivo separado

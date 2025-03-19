@@ -1,0 +1,3 @@
+todo:
+
+1. Colocar os argumentos dentro de cada arquivo ao invés de dentro da utils (pensar se isso é realmente uma boa ideia)

@@ -26,3 +26,24 @@ para executar o código
 
 ## Licença
 
+## Code Workflow
+
+O código dos experimentos está organizado da seguinte forma:
+
+Input: Conjunto de dados com notícias reais e notícias de blog de checagem. As notícias reais tem rótulo -1 enquanto as notícias falsas tem rótulo 1.
+
+Objetivo: Classificar as notícias de maneira transdutiva semissupervisionada por meio do paradigma de aprendizado positivo. No caso desse trabalho, as notícias falsas (rótulo 1) serão utilizadas como classe positva durante o treinamento.
+
+Arquivos:
+
+1. llm_news_debias.py -- Esse arquivo é responsável por extrair as notícias falsas dos sites de checagem caso a notícia seja falsa ou executar uma sumarização caso a notícia seja verdadeira. O objetivo é deixar as notícias falsas e verdadeiras com um tamanho próximo.
+
+2. data_analysis.py -- Arquivo que faz as análises do novo dataset (contagem de palavras, tokes, etc.)
+
+3. text_embedding.py -- Faz a transformação dos textos em vetores
+
+4. graph_generator.py -- Transforma o output do text_embedding.py em um grafo a partir de um algoritmo pré-definido
+
+5. data_processing.py -- transforma o output do text_embeddings.py em um formato onde seja possível importar usando torch_geometric.data.
+
+6. benchmark.py -- Aplica os modelos definidos em models.py no benchmark de dados positivos. Esse arquivo deve aplicar o grafo gerado no benchmark.
