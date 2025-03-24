@@ -36,4 +36,10 @@ python3 text_embedding.py --config $JSON_PATH
 EMBEDDING_ORIGINAL_PATH=results/$ACTUAL_DATE/embedded_original_data.npy
 EMBEDDING_DEBIASED_PATH=results/$ACTUAL_DATE/embedded_debiased_data.npy
 
-jq --arg embedding_original_path $EMBEDDING_ORIGINAL_PATH 
+jq --arg embedding_original_path "$EMBEDDING_ORIGINAL_PATH" '. + {"embedding_original_path": $embedding_original_path}' "$JSON_PATH" > temp.json && mv temp.json "$JSON_PATH"
+jq --arg embedding_debiased_path "$EMBEDDING_DEBIASED_PATH" '. + {"embedding_debiased_path": $embedding_debiased_path}' "$JSON_PATH" > temp.json && mv temp.json "$JSON_PATH"
+
+echo "generating graphs..."
+python3 graph_generator.py --config $JSON_PATH
+echo "all graphs successfully generated"
+

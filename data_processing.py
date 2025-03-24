@@ -5,10 +5,26 @@ This file is responsable for create the torch_geeometric.data file, split into t
 import numpy as np
 import torch
 from torch_geometric.data import Data
+import utils.utils as utils
 
-# TODO: colocar os paths corretos
-# Carrega os arquivos X.npy e edge_index.npy
-X = np.load("embeddings.npy")  # Matriz de features dos nós
+args = utils.parse_arguments()
+if args.config:
+        config_params = utils.load_config_from_json(args.config)
+        # Atualiza os parâmetros do argparse com os valores do JSON
+        for key, value in config_params.items():
+            setattr(args, key, value)
+
+# O ideal aqui seria fazer uma pasta para original/debiased
+
+if args.run_both_datasets == None or args.run_both_datasets == 'original':
+    # para cada um dos grafos gerados vamos rodar um conjunto dos dados
+    X = np.load(args.embedding_original_path)
+
+    
+
+if args.run_both_datasets == None or args.run_both_datasets == 'debiased':
+    X = np.load(args.embedding_debiased_path)
+
 edge_index = np.load("edge_index_KNN.npy")  # Arestas do grafo
 # TODO: colocar o arquivo de rótulos Y
 # y = np.load('y.npy')
@@ -28,7 +44,7 @@ graph_data = Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor)
 samples = 2
 
 # Esse loop for é responsável por gerar `samples` diferentes que serão usados para teste.
-for s in range(samples):
+for s in range(args.samples):
     # TODO: colocar o valor de p em variavel args
     p = 0.3
 

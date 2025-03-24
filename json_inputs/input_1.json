@@ -1,11 +1,14 @@
 {
   "input_data_path": "datasets/FactCheckedNews/Dataset/Fact_checked_news.tsv",
-  "embed_both_datasets": "debiased",
+  "run_both_datasets": "debiased",
   "llm_model": "gemma3:12b",
   "prompt_debias_input_path": "prompts/input_debias/debias_1.md",
   "prompt_summarization_input_path": "prompts/input_summarization/summarization_1.md",
   "number_of_samples": 4,
-  "actual_date": "2025-03-19_08:14:56",
-  "input_debiased_data_path": "results/2025-03-19_08:14:56/llm_processed_data.tsv",
-  "embedding_model": "nomic-embed-text"
+  "actual_date": "2025-03-19_10:27:27",
+  "input_debiased_data_path": "results/2025-03-19_10:27:27/llm_processed_data.tsv",
+  "embedding_model": "nomic-embed-text",
+  "graph_generator": "KNN",
+  "embedding_original_path": "results/2025-03-19_10:27:27/embedded_original_data.npy",
+  "embedding_debiased_path": "results/2025-03-19_10:27:27/embedded_debiased_data.npy"
 }

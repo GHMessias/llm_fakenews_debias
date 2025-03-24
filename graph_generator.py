@@ -1,19 +1,8 @@
-import networkx as nx
 import utils.utils as utils
-import numpy as np
 from sklearn.neighbors import NearestNeighbors
+import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse.csgraph import minimum_spanning_tree
-
-args = utils.parse_arguments()
-if args.config:
-        config_params = utils.load_config_from_json(args.config)
-        # Atualiza os parâmetros do argparse com os valores do JSON
-        for key, value in config_params.items():
-            setattr(args, key, value)
-
-# TODO: colocar o caminho de saída do arquivo text_embedding.py
-X = np.load('embeddings.npy')
 
 def graph_generator(X, graph_type: str, k = None):
     if graph_type == "KNN":
@@ -46,10 +35,28 @@ def graph_generator(X, graph_type: str, k = None):
          print('NOT IMPLEMENTED')
          return
 
-    else:
-         print(f"{graph_type} NOT IMPLEMENTED IN graph_generator.graph_generator")
 
-# TODO: generalizar para todos os tipos de grafos
-for graph in args.graph_generator:
-     edge_index = graph_generator(graph_type = graph, k =3 , X = X)
-     np.save(f'edge_index_{graph}', edge_index)
+args = utils.parse_arguments()
+if args.config:
+        config_params = utils.load_config_from_json(args.config)
+        # Atualiza os parâmetros do argparse com os valores do JSON
+        for key, value in config_params.items():
+            setattr(args, key, value)
+
+graph_generator_list = args.graph_generator.split(' ')
+
+if args.run_both_datasets:
+    if args.run_both_datasets == 'original':
+        X = np.load(args.embedding_original_path)
+    if args.run_both_datasets == 'debiased':
+        X = np.load(args.embedding_debiased_path)
+    else: 
+        raise "UNDEFINED EMBED"
+    for graph in graph_generator_list:
+        #TODO: colocar o k nos parâmetros
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3)
+        np.save(f'results/{args.actual_date}/edge_index_{graph}.npy', edge_index)
+
+if args.run_both_datasets == None:
+    raise "NOT IMPLEMENTED YET"
+

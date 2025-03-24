@@ -15,21 +15,19 @@ if args.config:
         for key, value in config_params.items():
             setattr(args, key, value)
 
-print(args.embed_both_datasets)
-
-if args.embed_both_datasets:
-    if args.embed_both_datasets == 'original':
+if args.run_both_datasets:
+    if args.run_both_datasets == 'original':
         df = pd.read_csv(args.input_data_path, sep = '\t')
-    if args.embed_both_datasets == 'debiased':
+    if args.run_both_datasets == 'debiased':
         df = pd.read_csv(args.input_debiased_data_path, sep = '\t')
     else: 
         raise "UNDEFINED EMBED"
     df['embedding'] = df['news'].apply(get_embedding)
     embeddings_array = np.array(df['embedding'].tolist())
-    output_path = f'results/{args.actual_date}/embedded_{args.embed_both_datasets}_data.npy'
+    output_path = f'results/{args.actual_date}/embedded_{args.run_both_datasets}_data.npy'
     np.save(output_path, embeddings_array)
 
-if args.embed_both_datasets == None:
+if args.run_both_datasets == None:
     df_original = pd.read_csv(args.input_data_path, sep = '\t')
     df_debiased = pd.read_csv(args.input_debiased_data_path, sep = '\t')
 

@@ -1,1 +1,1 @@
-"sumarize o texto "
+Considerando a notícia acima, selecione de 2 a 4 frases que demonstrem a ideia principal do que está sendo reportado. Ao adicionar a frase, não altere o conteúdo original dela, adicionando-a na íntegra. Retorne apenas o texto reduzido com as frases originais, sem comentários adicionais sobre ela. Concatene os textos por meio de pontos finais, retirando as aspas.
