@@ -22,6 +22,8 @@ def parse_arguments():
     parser.add_argument('--embedding_debiased_path', type = str)
     parser.add_argument('--graph_generator', nargs = '+')
     parser.add_argument('--benchmark_samples', type = int, default = 2)
+    parser.add_argument('--p', type = float, default = 0.1, help = "portion of positive elements that will be used for train")
+    parser.add_argument('--models', nargs = '+', type = str, help = 'name of each models from model.model.py file.')
 
 
     parser.add_argument('--input_column', type = str, help = 'csv Column that the model will use to debias')

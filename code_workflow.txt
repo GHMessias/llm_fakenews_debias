@@ -1,0 +1,12 @@
+|-- results
+|   |-- date
+|	|-- debiased_graphs
+|		|-- graph_knn.npy
+|	|-- orginal_graphs
+|		|-- graph_knn.npy
+|		|-- graph_knn.pt
+|   	|-- embedded_debiased_data.npy
+|   	|-- llm_processed_data.tsvro
+|	|-- samples
+|		|-- train_mask_0.pt
+|		|-- test_mask_0.pt

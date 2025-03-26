@@ -4,11 +4,12 @@
   "llm_model": "gemma3:12b",
   "prompt_debias_input_path": "prompts/input_debias/debias_1.md",
   "prompt_summarization_input_path": "prompts/input_summarization/summarization_1.md",
-  "number_of_samples": 4,
-  "actual_date": "2025-03-19_10:27:27",
-  "input_debiased_data_path": "results/2025-03-19_10:27:27/llm_processed_data.tsv",
+  "number_of_samples": 30,
+  "actual_date": "2025-03-26_08:06:32",
+  "input_debiased_data_path": "results/2025-03-26_08:00:08/llm_processed_data.tsv",
   "embedding_model": "nomic-embed-text",
-  "graph_generator": "KNN",
-  "embedding_original_path": "results/2025-03-19_10:27:27/embedded_original_data.npy",
-  "embedding_debiased_path": "results/2025-03-19_10:27:27/embedded_debiased_data.npy"
+  "graph_generator": "KNN random",
+  "embedding_original_path": "results/2025-03-26_07:57:04/embedded_original_data.npy",
+  "embedding_debiased_path": "results/2025-03-26_07:57:04/embedded_debiased_data.npy",
+  "models": "MCLS"
 }

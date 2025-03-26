@@ -17,6 +17,10 @@ def graph_generator(X, graph_type: str, k = None):
         edge_index = np.array(edge_index).T
         return edge_index
     
+    if graph_type == "random":
+        edge_index = np.random.uniform(2,3, 10)
+        return edge_index
+        
     if graph_type == "MST":
         # Calcula a matriz de distâncias euclidianas entre os pontos
         dist_matrix = squareform(pdist(X, metric='euclidean'))
@@ -48,14 +52,17 @@ graph_generator_list = args.graph_generator.split(' ')
 if args.run_both_datasets:
     if args.run_both_datasets == 'original':
         X = np.load(args.embedding_original_path)
+        path = f'results/{args.actual_date}/original_graphs/'
     if args.run_both_datasets == 'debiased':
         X = np.load(args.embedding_debiased_path)
+        path = f'results/{args.actual_date}/debiased_graphs/'
+
     else: 
         raise "UNDEFINED EMBED"
     for graph in graph_generator_list:
         #TODO: colocar o k nos parâmetros
         edge_index = graph_generator(X = X, graph_type = graph, k = 3)
-        np.save(f'results/{args.actual_date}/edge_index_{graph}.npy', edge_index)
+        np.save(path + f'edge_index_{graph}', edge_index)
 
 if args.run_both_datasets == None:
     raise "NOT IMPLEMENTED YET"
