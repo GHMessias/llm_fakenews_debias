@@ -22,8 +22,13 @@ for graph in graph_generator_list:
     data = torch.load(f'results/{args.actual_date}/debiased_graphs/graph_{graph}.pt')
 
     for s in range(args.benchmark_samples):
+        # TODO: remover o hard coded, usado somente para testes pontuais
         data.train_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/train_mask_{s}.pt')
         data.test_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/test_mask_{s}.pt')
+
+        # montar os conjuntos P e U
+        data.P = torch.nonzero(data.train_mask, as_tuple=True)[0]
+        data.U = torch.nonzero(data.test_mask, as_tuple=True)[0]
 
         for model_name in model_list:
             if model_name == "MCLS":
@@ -31,6 +36,12 @@ for graph in graph_generator_list:
                 model = MCLS(data, k = 7, ratio = 0.3)
                 model.train
                 RN = model.negative_inference(num_neg = 10)
-                print(RN)
+                print('RN MCLS', RN, graph)
 
 
+            if model_name == 'CCRNE':
+                 # TODO: hard coded, do it with args instead
+                 model = CCRNE(data, ratio = 0.3)
+                 model.train
+                 RN = model.negative_inference(num_neg = 10)
+                 print('RN CCRNE', RN, graph)

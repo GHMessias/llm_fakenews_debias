@@ -47,3 +47,7 @@ Arquivos:
 5. data_processing.py -- transforma o output do text_embeddings.py em um formato onde seja possível importar usando torch_geometric.data.
 
 6. benchmark.py -- Aplica os modelos definidos em models.py no benchmark de dados positivos. Esse arquivo deve aplicar o grafo gerado no benchmark.
+
+
+
+Textos feitos truncamento em 2000 caracteres

@@ -39,7 +39,8 @@ if args.run_both_datasets == None or args.run_both_datasets == 'debiased':
         y_tensor = torch.tensor(y, dtype = torch.long)
         # Filtra os índices dos exemplos positivos (classe 1)
         positive_indices = np.where(y == 1)[0]
-        graph_data = Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor, p = args.p)
+        # TODO: ESSA PASSAGEM ESTÁ ERRADA, P É UMA LISTA COM OS INDICES DOS POSITIVOS E NÃO A PROPORÇÃO
+        graph_data = Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor)
 
         torch.save(graph_data, f'results/{args.actual_date}/debiased_graphs/graph_{graph}.pt')
 
@@ -50,7 +51,7 @@ if args.run_both_datasets == None or args.run_both_datasets == 'debiased':
             # Aleatoriza os índices positivos
             np.random.shuffle(positive_indices)
             split_idx = int(len(positive_indices) * args.p)
-            split_idx = int(len(positive_indices) * graph_data.p)
+            split_idx = int(len(positive_indices) * args.p)
             train_indices = positive_indices[:split_idx]  # p% para treino
             test_indices = np.setdiff1d(np.arange(len(y)), train_indices)  # O restante para teste
 
