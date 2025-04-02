@@ -57,4 +57,6 @@ echo "data processed"
 
 # execução dos experimentos
 echo "starting experiments..."
+
+mkdir results/$ACTUAL_DATE/benchmark_outputs
 python3 benchmark.py --config $JSON_PATH

@@ -35,7 +35,7 @@ def llm_query(news, prompt_path):
          },
         {
         'role': 'user',
-        'content': news
+        'content': news[:1000]
         }
     ],
     options = {"temperature" : args.temperature}

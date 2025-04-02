@@ -16,14 +16,12 @@ if args.config:
             setattr(args, key, value)
 
 # label value
-y = pd.read_csv(args.input_data_path, sep = '\t')['label'].to_numpy()
+y = pd.read_csv(args.input_debiased_data_path, sep = '\t')['label'].to_numpy()
 
 # gerar os 
 if args.run_both_datasets == None or args.run_both_datasets == 'original':
     # para cada um dos grafos gerados vamos rodar um conjunto dos dados
     X = np.load(args.embedding_original_path)
-
-    
 
 if args.run_both_datasets == None or args.run_both_datasets == 'debiased':
     X = np.load(args.embedding_debiased_path)
@@ -51,18 +49,21 @@ if args.run_both_datasets == None or args.run_both_datasets == 'debiased':
             # Aleatoriza os índices positivos
             np.random.shuffle(positive_indices)
             split_idx = int(len(positive_indices) * args.p)
-            split_idx = int(len(positive_indices) * args.p)
             train_indices = positive_indices[:split_idx]  # p% para treino
-            test_indices = np.setdiff1d(np.arange(len(y)), train_indices)  # O restante para teste
+            test_indices = np.setdiff1d(np.arange(graph_data.x.shape[0]), train_indices)  # O restante para teste
+            print(test_indices)
 
             # Cria máscaras booleanas para treino e teste
-            train_mask = torch.zeros(len(y), dtype=torch.bool)
-            test_mask = torch.ones(len(y), dtype=torch.bool)
+            train_mask = torch.zeros(graph_data.x.shape[0], dtype=torch.bool)
+            test_mask = torch.zeros(graph_data.x.shape[0], dtype=torch.bool)
+            
 
             # Define quais nós fazem parte do treino
             train_mask[train_indices] = True
+            print('train mask', train_mask)
             # Define quais nós fazem parte do teste
             test_mask[test_indices] = True
+            print('test mask', test_mask)
 
             # TODO: organizar as pastas onde os arquivos serão salvos, também seus caminhos e diferenças
             torch.save(train_mask, f'results/{args.actual_date}/debiased_graphs/samples/train_mask_{s}.pt')
