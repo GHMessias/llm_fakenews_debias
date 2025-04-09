@@ -26,21 +26,16 @@ model_list = args.models.split(' ')
 
 # TODO: alterar para lidar com ambos os tipos de dados, original e debiased
 for graph in graph_generator_list:
-    # data = torch.load(f'results/{args.actual_date}/debiased_graphs/graph_{graph}.pt', weights_only=False)
-    # data.y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep = '\t')['label'])
-
-    # TODO: remover, feito localmente afim de testes de execução
-    data = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/graph_KNN.pt', weights_only=False)
-    data.y = torch.tensor(pd.read_csv('results/2025-04-01_17:56:43/llm_processed_data.tsv', sep = '\t')['label'])
-    
+    data = torch.load(f'results/{args.actual_date}/debiased_graphs/graph_{graph}.pt', weights_only=False)
+    data.y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep = '\t')['label'])
 
     for s in range(args.benchmark_samples):
         # TODO: remover o hard coded, usado somente para testes pontuais
 
-        data.train_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/train_mask_{s}.pt')
-        data.test_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/test_mask_{s}.pt')
-        # data.train_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/train_mask_{s}.pt')
-        # data.test_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/test_mask_{s}.pt')
+        # data.train_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/train_mask_{s}.pt')
+        # data.test_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/test_mask_{s}.pt')
+        data.train_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/train_mask_{s}.pt')
+        data.test_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/test_mask_{s}.pt')
 
         # montar os conjuntos P e U
         data.P = torch.nonzero(data.train_mask, as_tuple=True)[0]
@@ -135,7 +130,7 @@ for graph in graph_generator_list:
 
                 # Precisa chamar o treinamento do modelo
                 optimizer = torch.optim.Adam(params=model.parameters(), lr = 0.001) 
-                train_gae(data = data, gae_model = model, optimizer = optimizer, epochs = 100)
+                train_gae(data = data, gae_model = model, optimizer = optimizer, epochs = 100, verbose = True)
                 RN = gae_negative_inference(data, model, len(data.P))
                 print(RN)
                 # Precisa fazer a fase de inferência

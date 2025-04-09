@@ -1,0 +1,1 @@
+A tarefa de extração de notícias falsas consiste de sites de checagem consiste em encontrar a informação falsa associada a notícia de checagem. Ou seja, dado um texto de notícia de checagem, encontrar qual informação falsa foi desmentida. Sabendo disso, aplique a extração de notícias falsas no seguinte texto de site de checagem: 

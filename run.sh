@@ -14,6 +14,7 @@ jq --arg date "$ACTUAL_DATE" '. + {"actual_date": $date}' "$JSON_PATH" > temp.js
 MAIN_FILE_PATH=$(pwd)
 
 mkdir "results/$ACTUAL_DATE"
+mkdir "results/$ACTUAL_DATE/dataset_analysis"
 sleep 2
 
 echo "Running LLM debias and summarization..."
