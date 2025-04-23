@@ -24,123 +24,129 @@ if args.config:
 graph_generator_list = args.graph_generator.split(' ')
 model_list = args.models.split(' ')
 
-# TODO: alterar para lidar com ambos os tipos de dados, original e debiased
-for graph in graph_generator_list:
-    data = torch.load(f'results/{args.actual_date}/debiased_graphs/graph_{graph}.pt', weights_only=False)
-    data.y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep = '\t')['label'])
+for data_type in ['original', 'debiased']:
 
-    for s in range(args.benchmark_samples):
-        # TODO: remover o hard coded, usado somente para testes pontuais
+    # TODO: alterar para lidar com ambos os tipos de dados, original e debiased
+    for graph in graph_generator_list:
+        data = torch.load(f'results/{args.actual_date}/{data_type}_graphs/graph_{graph}.pt', weights_only=False)
+        data.y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep = '\t')['label'])
 
-        # data.train_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/train_mask_{s}.pt')
-        # data.test_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/test_mask_{s}.pt')
-        data.train_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/train_mask_{s}.pt')
-        data.test_mask = torch.load(f'results/{args.actual_date}/debiased_graphs/samples/test_mask_{s}.pt')
+        for s in range(args.benchmark_samples):
+            # TODO: remover o hard coded, usado somente para testes pontuais
 
-        # montar os conjuntos P e U
-        data.P = torch.nonzero(data.train_mask, as_tuple=True)[0]
-        data.U = torch.nonzero(data.test_mask, as_tuple=True)[0]
+            # data.train_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/train_mask_{s}.pt')
+            # data.test_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/test_mask_{s}.pt')
+            data.train_mask = torch.load(f'results/{args.actual_date}/{data_type}_graphs/samples/train_mask_{s}.pt', weights_only=False)
+            data.test_mask = torch.load(f'results/{args.actual_date}/{data_type}_graphs/samples/test_mask_{s}.pt', weights_only=False)
 
-        for model_name in model_list:
-            # Pensando em remover pois está dando resultados vazios
-            if model_name == "MCLS":
-                # TODO: hard coded, do it with args instead
-                model = MCLS(data, k = 2, ratio = 0.3)
-                model.train()
-                RN = model.negative_inference(num_neg = 10)
+            # montar os conjuntos P e U
+            data.P = torch.nonzero(data.train_mask, as_tuple=True)[0]
+            num_neg = len(data.P)
+            data.U = torch.nonzero(data.test_mask, as_tuple=True)[0]
 
-                indices = data.P.tolist() + RN
+            for model_name in model_list:
+                # Pensando em remover pois está dando resultados vazios
+                if model_name == "MCLS":
+                    try:
+                        # TODO: hard coded, do it with args instead
+                        model = MCLS(data, k = 7, ratio = 0.3)
+                        model.train()
+                        RN = model.negative_inference(num_neg = num_neg)
+
+                        indices = data.P.tolist() + RN
+                        
+                        y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+
+                        svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                        svm_clf.fit(data.x[indices], y_train_SVM)
+                        y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                        torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
+                    except:
+                        t = torch.tensor([])
+                        torch.save(t, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
+
+                if model_name == 'CCRNE':
+                    # TODO: hard coded, do it with args instead
+                    model = CCRNE(data, ratio = 0.3)
+                    model.train()
+                    RN = model.negative_inference(num_neg = num_neg)
+
+                    indices = data.P.tolist() + RN.tolist()
+                    
+                    y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+
+                    svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                    svm_clf.fit(data.x[indices], y_train_SVM)
+                    y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
+
+        
+                if model_name == 'PU_LP':
+                    # TODO: hard coded, do it with args instead
+                    model = PU_LP(data = data, alpha = 0.1, m = 3, l = 1)
+                    model.train()
+                    RN = model.negative_inference(num_neg = num_neg)
                 
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+                    indices = data.P.tolist() + RN.tolist()
+                    
+                    y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
 
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
-                
-
-            if model_name == 'CCRNE':
-                # TODO: hard coded, do it with args instead
-                model = CCRNE(data, ratio = 0.3)
-                model.train()
-                RN = model.negative_inference(num_neg = 3)
-
-                indices = data.P.tolist() + RN.tolist()
-                
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
-
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
-
-      
-            if model_name == 'PU_LP':
-                # TODO: hard coded, do it with args instead
-                model = PU_LP(data = data, alpha = 0.1, m = 3, l = 1)
-                model.train()
-                RN = model.negative_inference(num_neg = 3)
-            
-                indices = data.P.tolist() + RN.tolist()
-                
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
-
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
+                    svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                    svm_clf.fit(data.x[indices], y_train_SVM)
+                    y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
 
 
-            if model_name == 'LP_PUL':
-                model = LP_PUL(data)
-                model.train()
-                RN = model.negative_inference(num_neg = 10)
+                if model_name == 'LP_PUL':
+                    model = LP_PUL(data)
+                    model.train()
+                    RN = model.negative_inference(num_neg = num_neg)
 
-                indices = data.P.tolist() + RN.tolist()
-                
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+                    indices = data.P.tolist() + RN.tolist()
+                    
+                    y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
 
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
+                    svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                    svm_clf.fit(data.x[indices], y_train_SVM)
+                    y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
 
 
-            if model_name == 'RCSVM':
-                model = RCSVM(data = data, alpha = 0.7, beta = 0.3)
-                model.train()
-                RN = model.negative_inference(num_neg = 10)
+                if model_name == 'RCSVM':
+                    model = RCSVM(data = data, alpha = 0.7, beta = 0.3)
+                    model.train()
+                    RN = model.negative_inference(num_neg = num_neg)
 
-                indices = data.P.tolist() + RN.tolist()
-                
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+                    indices = data.P.tolist() + RN.tolist()
+                    
+                    y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
 
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
+                    svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                    svm_clf.fit(data.x[indices], y_train_SVM)
+                    y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
 
-            # TODO: Modelo GCN e RewiringGCN
+                # TODO: Modelo GCN e RewiringGCN
 
-            if model_name == 'PSRB':
-                # Precisa aplicar a reescrita nos dados
-                # TODO: Hard coded, do it with args instead
-                model = GAE(encoder = RGCN(input_size = data.x.shape[1], hidden_size=64, output_size=32, L = 2))
-                data.graph_list = rewiring(graph = to_networkit(data.edge_index, directed=False), L = 3, P = data.P)
+                if model_name == 'PSRB':
+                    # Precisa aplicar a reescrita nos dados
+                    # TODO: Hard coded, do it with args instead
+                    model = GAE(encoder = RGCN(input_size = data.x.shape[1], hidden_size=64, output_size=32, L = 2))
+                    data.graph_list = rewiring(graph = to_networkit(data.edge_index, directed=False), L = 3, P = data.P)
 
-                # Precisa chamar o treinamento do modelo
-                optimizer = torch.optim.Adam(params=model.parameters(), lr = 0.001) 
-                train_gae(data = data, gae_model = model, optimizer = optimizer, epochs = 100, verbose = True)
-                RN = gae_negative_inference(data, model, len(data.P))
-                print(RN)
-                # Precisa fazer a fase de inferência
+                    # Precisa chamar o treinamento do modelo
+                    optimizer = torch.optim.Adam(params=model.parameters(), lr = 0.001) 
+                    train_gae(data = data, gae_model = model, optimizer = optimizer, epochs = 100, verbose = True)
+                    RN = gae_negative_inference(data, model, len(data.P))
+                    print(RN)
+                    # Precisa fazer a fase de inferência
 
-                indices = data.P.tolist() + RN.tolist()
-                
-                y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+                    indices = data.P.tolist() + RN.tolist()
+                    
+                    y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
 
-                svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
-                svm_clf.fit(data.x[indices], y_train_SVM)
-                y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
-                torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/output_{model_name}_{s}.pt')
+                    svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
+                    svm_clf.fit(data.x[indices], y_train_SVM)
+                    y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
             

@@ -1,0 +1,2 @@
+2025-04-21_16:41:51 -- Experimentos executados com p = 0.01
+2025-04-22_07:56:34 -- Experimentos executados com p = 0.05

@@ -8,6 +8,46 @@ from sklearn.metrics.pairwise import euclidean_distances, cosine_distances
 from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.sparse import csr_matrix
 import torch
+from itertools import combinations
+import pandas as pd
+import yake
+
+def yake_graph(df, text_column="Model Answer"):
+    def extract_keywords(text, ngram_range=(1, 3), top_k=20):
+        # Extrai n-gramas entre unigramas e trigramas
+        custom_kw_extractor = yake.KeywordExtractor(
+            lan="pt",  # ou "en" se os textos forem em inglês
+            n=ngram_range[1],  # extrai até trigramas
+            top=top_k,
+            features=None
+        )
+        keywords = custom_kw_extractor.extract_keywords(text)
+        # Filtra por tamanho de n-grama desejado (1 a 3)
+        selected = [kw for kw, score in keywords if len(kw.split()) in range(ngram_range[0], ngram_range[1]+1)]
+        return set(selected)
+
+    
+    # Passo 1: extrair n-gramas relevantes de cada texto
+    keyword_sets = df[text_column].apply(lambda txt: extract_keywords(txt)).tolist()
+    
+    # Passo 2: comparar cada par de textos
+    edges = []
+    for i, j in combinations(range(len(keyword_sets)), 2):
+        if keyword_sets[i] & keyword_sets[j]:  # interseção não vazia
+            edges.append((i, j))
+            edges.append((j, i))  # grafo não direcionado (duplicar)
+            print(i,j)
+
+    print(edges)
+    if not edges:
+        raise ValueError("Nenhuma conexão entre os textos encontrada com os critérios definidos.")
+    
+    # Passo 3: transformar em edge_index (formato [2, num_edges])
+    edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+    
+    return edge_index
+
+
 
 def mst_graph(X, metric):
 
@@ -127,7 +167,7 @@ class WeightedCommonNeighbours(Predictor):
 
         return self.W
 
-def graph_generator(X, graph_type: str, k = None):
+def graph_generator(X, graph_type: str, k = None, df = None):
     if graph_type == "KNN":
         nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='auto').fit(X)
         distances, indices = nbrs.kneighbors(X)
@@ -176,6 +216,10 @@ def graph_generator(X, graph_type: str, k = None):
         edge_index = torch.tensor([W_coo.row, W_coo.col], dtype=torch.long)
 
         return edge_index
+    
+    if graph_type == "yake":
+        edge_index = yake_graph(df, text_column = 'news')
+        return edge_index
 
 
 
@@ -200,9 +244,26 @@ if args.run_both_datasets:
         raise "UNDEFINED EMBED"
     for graph in graph_generator_list:
         #TODO: colocar o k nos parâmetros
-        edge_index = graph_generator(X = X, graph_type = graph, k = 3)
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
+        print('edge_index', edge_index)
         np.save(path + f'edge_index_{graph}', edge_index)
 
 if args.run_both_datasets == None:
-    raise "NOT IMPLEMENTED YET"
+    X = np.load(args.embedding_original_path)
+    path = f'results/{args.actual_date}/original_graphs/'
+
+    for graph in graph_generator_list:
+        #TODO: colocar o k nos parâmetros
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
+        print('edge_index', edge_index)
+        np.save(path + f'edge_index_{graph}', edge_index)
+
+    X = np.load(args.embedding_debiased_path)
+    path = f'results/{args.actual_date}/debiased_graphs/'
+
+    for graph in graph_generator_list:
+        #TODO: colocar o k nos parâmetros
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
+        print('edge_index', edge_index)
+        np.save(path + f'edge_index_{graph}', edge_index)
 
