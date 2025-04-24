@@ -40,40 +40,53 @@ if args.config:
 
 graph_generator_list = args.graph_generator.split(' ')
 model_list = args.models.split(' ')
-Y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep='\t')['label'])
+# Y = torch.tensor(pd.read_csv(args.input_data_path, sep='\t')['label'])
 
 # Lista para armazenar os resultados
 results = []
+options = ['debiased', 'original']
+for opt in options:
+    for graph in graph_generator_list:
+        data = torch.load(f'results/{args.actual_date}/{opt}_graphs/graph_{graph}.pt', weights_only=False)
+        data.y = torch.tensor(pd.read_csv(args.input_debiased_data_path, sep = '\t')['label'])
+        for s in range(args.benchmark_samples):
+            # test_mask = torch.load(f'results/{args.actual_date}/{opt}_graphs/samples/test_mask_{s}.pt', weights_only=False)
+            # y = torch.tensor(
+            #     pd.read_csv(args.input_data_path, sep='\t')['label']
+            # )
+            # y_true = Y[test_mask]
 
-for graph in graph_generator_list:
-    for s in range(args.benchmark_samples):
-        test_mask = torch.load(
-            f'results/{args.actual_date}/debiased_graphs/samples/test_mask_{s}.pt',
-            weights_only=False
-        )
-        y_true = torch.tensor(
-            pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep='\t')['label']
-        )[test_mask]
+            data.test_mask = torch.load(f'results/{args.actual_date}/{opt}_graphs/samples/test_mask_{s}.pt', weights_only=False)
 
-        for model in model_list:
-            y_pred = torch.load(
-                f'results/{args.actual_date}/benchmark_outputs/output_{model}_{graph}_{s}.pt',
-                weights_only=False
-            )
-            score = f1_score(y_true, y_pred)
-            # Armazenando no formato de dicionário
-            results.append({
-                'model': model,
-                'graph': graph,
-                'sample': s,
-                'f1_score': score
-            })
+            for model in model_list:
+                y_pred = torch.load(f'results/{args.actual_date}/benchmark_outputs/{opt}/output_{model}_{graph}_{s}.pt', weights_only=False)
+
+                print('f1 score ', f1_score(data.y[data.test_mask], y_pred))
+
+                
+                print('y_pred ', torch.unique(y_pred, return_counts = True))
+
+                # print(y_pred[:50])
+                # print(Y[:50])
+                if len(y_pred) == 0:
+                    print('ERRO IDENTIFICADO NO VETOR Y')
+                score = f1_score(data.y[data.test_mask], y_pred)
+
+                print(model, score)
+                # Armazenando no formato de dicionário
+                results.append({
+                    'model': model,
+                    'graph': graph,
+                    'sample': s,
+                    'f1_score': score,
+                    'option' : opt
+                })
 
 # Convertendo para DataFrame
 df_results = pd.DataFrame(results)
 
 # Agrupa por modelo e grafo, calcula média e desvio padrão
-grouped = df_results.groupby(['model', 'graph'])['f1_score'].agg(['mean', 'std']).reset_index()
+grouped = df_results.groupby(['model', 'graph', 'option'])['f1_score'].agg(['mean', 'std']).reset_index()
 
 # Renomeia colunas para clareza
 grouped = grouped.rename(columns={

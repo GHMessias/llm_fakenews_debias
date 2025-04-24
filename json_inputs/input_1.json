@@ -5,13 +5,13 @@
   "prompt_debias_input_path": "prompts/input_debias/debias_1.md",
   "prompt_summarization_input_path": "prompts/input_summarization/summarization_1.md",
   "number_of_samples": null,
-  "actual_date": "2025-04-10_23:34:38",
-  "input_debiased_data_path": "results/2025-04-10_23:34:38/llm_processed_data.tsv",
+  "actual_date": "2025-04-23_15:00:05",
+  "input_debiased_data_path": "results/2025-04-21_16:41:51/llm_processed_data.tsv",
   "embedding_model": "nomic-embed-text",
   "graph_generator": "GBLP",
-  "embedding_original_path": "results/2025-04-10_23:34:38/embedded_original_data.npy",
-  "embedding_debiased_path": "results/2025-04-10_23:34:38/embedded_debiased_data.npy",
+  "embedding_original_path": "results/2025-04-23_15:00:05/embedded_original_data.npy",
+  "embedding_debiased_path": "results/2025-04-23_15:00:05/embedded_debiased_data.npy",
   "models": "PSRB",
-  "p": 0.05,
-  "benchmark_samples": 10
+  "p": 0.01,
+  "benchmark_samples": 2
 }

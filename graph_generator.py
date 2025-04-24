@@ -12,8 +12,8 @@ from itertools import combinations
 import pandas as pd
 import yake
 
-def yake_graph(df, text_column="Model Answer"):
-    def extract_keywords(text, ngram_range=(1, 3), top_k=20):
+def yake_graph(df, text_column):
+    def extract_keywords(text, ngram_range=(2, 3), top_k=5):
         # Extrai n-gramas entre unigramas e trigramas
         custom_kw_extractor = yake.KeywordExtractor(
             lan="pt",  # ou "en" se os textos forem em inglês
@@ -35,10 +35,8 @@ def yake_graph(df, text_column="Model Answer"):
     for i, j in combinations(range(len(keyword_sets)), 2):
         if keyword_sets[i] & keyword_sets[j]:  # interseção não vazia
             edges.append((i, j))
-            edges.append((j, i))  # grafo não direcionado (duplicar)
-            print(i,j)
+            edges.append((j, i))  # grafo não direcionado (duplicar
 
-    print(edges)
     if not edges:
         raise ValueError("Nenhuma conexão entre os textos encontrada com os critérios definidos.")
     
@@ -167,7 +165,7 @@ class WeightedCommonNeighbours(Predictor):
 
         return self.W
 
-def graph_generator(X, graph_type: str, k = None, df = None):
+def graph_generator(X, graph_type: str, k = None, df = None, column = None):
     if graph_type == "KNN":
         nbrs = NearestNeighbors(n_neighbors=k+1, algorithm='auto').fit(X)
         distances, indices = nbrs.kneighbors(X)
@@ -218,7 +216,7 @@ def graph_generator(X, graph_type: str, k = None, df = None):
         return edge_index
     
     if graph_type == "yake":
-        edge_index = yake_graph(df, text_column = 'news')
+        edge_index = yake_graph(df, text_column = column)
         return edge_index
 
 
@@ -232,38 +230,51 @@ if args.config:
 
 graph_generator_list = args.graph_generator.split(' ')
 
-if args.run_both_datasets:
+print(args.run_both_datasets)
+
+if args.run_both_datasets != None:
+    print('valor diferente de none')
     if args.run_both_datasets == 'original':
+        print('valor original')
         X = np.load(args.embedding_original_path)
         path = f'results/{args.actual_date}/original_graphs/'
-    if args.run_both_datasets == 'debiased':
+        column = 'news'
+    elif args.run_both_datasets == 'debiased':
+        print('valor debiased')
         X = np.load(args.embedding_debiased_path)
         path = f'results/{args.actual_date}/debiased_graphs/'
-
+        column = 'Model Answer'
     else: 
         raise "UNDEFINED EMBED"
+    
     for graph in graph_generator_list:
         #TODO: colocar o k nos parâmetros
-        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
-        print('edge_index', edge_index)
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'), column = column)
+        print('edge_index shape', edge_index.shape)
         np.save(path + f'edge_index_{graph}', edge_index)
 
 if args.run_both_datasets == None:
+    # Original path
+    print('valor none')
+    print('original')
     X = np.load(args.embedding_original_path)
     path = f'results/{args.actual_date}/original_graphs/'
 
     for graph in graph_generator_list:
         #TODO: colocar o k nos parâmetros
-        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
-        print('edge_index', edge_index)
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'), column = 'news')
+        # print('edge_index', edge_index)
+        print('edge_index shape', edge_index.shape)
         np.save(path + f'edge_index_{graph}', edge_index)
 
+    print('debiased')
     X = np.load(args.embedding_debiased_path)
     path = f'results/{args.actual_date}/debiased_graphs/'
 
     for graph in graph_generator_list:
         #TODO: colocar o k nos parâmetros
-        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'))
-        print('edge_index', edge_index)
+        edge_index = graph_generator(X = X, graph_type = graph, k = 3, df = pd.read_csv(args.input_debiased_data_path, sep = '\t'), column = 'Model Answer')
+        # print('edge_index', edge_index)
+        print('edge_index shape', edge_index.shape)
         np.save(path + f'edge_index_{graph}', edge_index)
 

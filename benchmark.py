@@ -11,6 +11,7 @@ from torch_geometric.nn import GAE
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import f1_score
 
 
 args = utils.parse_arguments()
@@ -29,13 +30,9 @@ for data_type in ['original', 'debiased']:
     # TODO: alterar para lidar com ambos os tipos de dados, original e debiased
     for graph in graph_generator_list:
         data = torch.load(f'results/{args.actual_date}/{data_type}_graphs/graph_{graph}.pt', weights_only=False)
-        data.y = torch.tensor(pd.read_csv(f'results/{args.actual_date}/llm_processed_data.tsv', sep = '\t')['label'])
+        data.y = torch.tensor(pd.read_csv(args.input_debiased_data_path, sep = '\t')['label'])
 
         for s in range(args.benchmark_samples):
-            # TODO: remover o hard coded, usado somente para testes pontuais
-
-            # data.train_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/train_mask_{s}.pt')
-            # data.test_mask = torch.load(f'results/2025-04-01_17:56:43/debiased_graphs/samples/test_mask_{s}.pt')
             data.train_mask = torch.load(f'results/{args.actual_date}/{data_type}_graphs/samples/train_mask_{s}.pt', weights_only=False)
             data.test_mask = torch.load(f'results/{args.actual_date}/{data_type}_graphs/samples/test_mask_{s}.pt', weights_only=False)
 
@@ -138,15 +135,16 @@ for data_type in ['original', 'debiased']:
                     optimizer = torch.optim.Adam(params=model.parameters(), lr = 0.001) 
                     train_gae(data = data, gae_model = model, optimizer = optimizer, epochs = 100, verbose = True)
                     RN = gae_negative_inference(data, model, len(data.P))
-                    print(RN)
-                    # Precisa fazer a fase de inferência
 
                     indices = data.P.tolist() + RN.tolist()
+                    # print(indices)
                     
                     y_train_SVM = np.array([1] * len(data.P) + [-1] * len(RN))
+                    # print(y_train_SVM)
 
                     svm_clf = SVC(kernel = 'rbf', C = 1.0, gamma = 'scale')
                     svm_clf.fit(data.x[indices], y_train_SVM)
                     y_pred = torch.tensor(svm_clf.predict(data.x[data.test_mask]))
+                    print('f1 score ', f1_score(data.y[data.test_mask], y_pred))
                     torch.save(y_pred, f'results/{args.actual_date}/benchmark_outputs/{data_type}/output_{model_name}_{graph}_{s}.pt')
             
